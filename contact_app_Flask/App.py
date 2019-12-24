@@ -1,5 +1,6 @@
-#IMPORTAR LIBRERIAS DE FLASK
-from flask import Flask, render_template, request
+#IMPORTAR LIBRERIAS DE FLASK, RENDER_TEMPLATE ES PARA MOSTRAR EL TEMPLATE, REQUEST ES PARA EL POST, REDIRECT  ES PARA REDIRECCIONAR CON LA URL
+#FLASH ES PARA MANDAR MENSAJES
+from flask import Flask, render_template, request, redirect, url_for, flash
 #IMPORTAR LIBRERIAS DE MYSQL (PARA LA CONEXION)
 from flaskext.mysql import MySQL 
 
@@ -13,10 +14,19 @@ app.config['MYSQL_DATABASE_DB'] = 'flaskcontacts'
 mysql = MySQL()
 mysql.init_app(app)
 
+#CONFIGURACIONES
+app.secret_key = 'mysecretkey'
+
 #RUTA DEL INDEX
 @app.route('/')
 def Index():
-    return render_template('index.html')
+    #LLAMAMOS EL CURSOR OBTENER LA CONEXCION
+        cur = mysql.get_db().cursor()
+        #CARGAMOS EL QUERY, LOS PORCENTAJES LOS PONEMOS PARA DESPUES METER UNA TUPLA CON LOS VALORES QUE CAPTURAMOS CON EL METODO POST
+        cur.execute('SELECT * FROM contacts')
+        #OBTENER LOS DATOS EN UNA LISTA
+        data = cur.fetchall()
+        return render_template('index.html', contacts = data)
 
 #RUTA PARA AGREGAR CONTACTOS, DEFINIMOS EL METODO
 @app.route ('/add_contact', methods=['POST'])
@@ -33,16 +43,22 @@ def add_contact(): #DEFINIMOS EL ADD_CONTACT
         (fullname, phone, email))
         #HACEMOS UN COMMIT PARA QUE LOS VALORES INGRESEN A LA BASE DE DATOS.
         mysql.get_db().commit()
-        return 'received'
+        flash('Contact Added successfully')
+        return redirect(url_for('Index'))
     
 
 @app.route ('/edit')
 def edit_contact():
     return 'edit contact'
 
-@app.route ('/delete')
-def delete_contact():
-    return 'delete contact'       
+@app.route ('/delete/<string:id>')
+def delete_contact(id):
+    cur = mysql.get_db().cursor()
+    #CARGAMOS EL QUERY, LOS PORCENTAJES LOS PONEMOS PARA DESPUES METER UNA TUPLA CON LOS VALORES QUE CAPTURAMOS CON EL METODO POST
+    cur.execute('DELETE FROM contacts where id = {0}'.format(id))
+    mysql.get_db().commit()
+    flash('Contact Removed successfully')
+    return redirect(url_for('Index'))       
 
 #CONFIGURAMOS EL PUERTO, LEVANTAMOS EL SERVIDOR Y EL MODO DEBUG
 if  __name__ == '__main__':
