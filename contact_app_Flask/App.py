@@ -47,9 +47,33 @@ def add_contact(): #DEFINIMOS EL ADD_CONTACT
         return redirect(url_for('Index'))
     
 
-@app.route ('/edit')
-def edit_contact():
-    return 'edit contact'
+@app.route ('/edit/<id>')
+def edit_contact(id):
+     cur = mysql.get_db().cursor()
+        #CARGAMOS EL QUERY, LOS PORCENTAJES LOS PONEMOS PARA DESPUES METER UNA TUPLA CON LOS VALORES QUE CAPTURAMOS CON EL METODO POST
+     cur.execute('SELECT * FROM contacts WHERE id = %s',(id))
+     data = cur.fetchall()
+     return render_template('edit-contact.html', contact = data[0])
+
+@app.route ('/update/<id>', methods = ['POST'])
+def update_contact(id):
+    if request.method == 'POST':
+        fullname = request.form['fullname']
+        phone = request.form['phone']
+        email = request.form['email']
+        cur = mysql.get_db().cursor()
+            #CARGAMOS EL QUERY, LOS PORCENTAJES LOS PONEMOS PARA DESPUES METER UNA TUPLA CON LOS VALORES QUE CAPTURAMOS CON EL METODO POST
+        cur.execute("""
+            UPDATE contacts 
+            SET fullname = %s,
+                email = %s,
+                phone = %s
+            WHERE id = %s
+        """, (fullname, phone, email, id))
+        mysql.get_db().commit()
+        flash('Contact Updated Successfully')
+        return redirect(url_for('Index'))
+
 
 @app.route ('/delete/<string:id>')
 def delete_contact(id):
