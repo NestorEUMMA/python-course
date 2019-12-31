@@ -11,11 +11,16 @@ const morgan = require('morgan');
 //CONFIGURACIONES, Proccess.env.PORT POR SI TENEMOS ALGUN SERVICIO EN LA NUBE COMO AZURE O HEROKU, ESTE TIENEN PUERTOS DEFINIDOS, 
 //CON EN CASO EXISTE UN PUERTO DEFINIDO QUE LO TOME, SI NO QUE USE POR DEFECTO EL PUERTO 3000
 app.set('port', process.env.PORT || 3000);
+app.set('json spaces', 2);
 
 //MIDDELWARE
 app.use(morgan('dev'));
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+
+//ROUTES
+app.use(require('./routes/index'));
+app.use('/api/movies',require('./routes/movies'));
  
 //INICIAMOS EL SERVIDOR
 app.listen(app.get('port'), () => {
